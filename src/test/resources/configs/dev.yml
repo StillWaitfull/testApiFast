@@ -1,0 +1,3 @@
+protocol: http
+host: samples.openweathermap.org
+baseUrl: /data/2.5/

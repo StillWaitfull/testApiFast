@@ -1,0 +1,4 @@
+configName: dev.yml
+timeout: 30
+
+#mvn clean test -DsuiteFile=src/test/resources/suites/Resgess.xml
