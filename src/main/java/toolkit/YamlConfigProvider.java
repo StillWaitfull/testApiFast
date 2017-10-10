@@ -13,8 +13,8 @@ public class YamlConfigProvider {
 
     private static final Yaml yaml = new Yaml();
     private static final String configFilePath = "src" + File.separator + "test" + File.separator + "resources" + File.separator + "configs" + File.separator;
-    private static final Map paramsMap = new HashMap();
-    private static final Map appParamsMap = new HashMap();
+    private static  Map paramsMap = new HashMap();
+    private static  Map appParamsMap = new HashMap();
 
     static {
         String appConfigs = "application.yml";

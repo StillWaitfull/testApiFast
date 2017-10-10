@@ -7,7 +7,6 @@ import tests.climate.ClimateTests;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         ClimateTests.class
-
 })
 public class RegressStage {
 

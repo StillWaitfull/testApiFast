@@ -18,9 +18,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.security.cert.CertificateException;
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 
@@ -30,6 +29,8 @@ public class OkHttp {
     private final static ThreadLocal<String> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final int TIMEOUT = Integer.parseInt(ApplicationConfig.TIMEOUT);
+    private static final ConcurrentHashMap<HttpUrl, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
+
 
     public enum RETROFITS {
         RETROFIT {
@@ -40,7 +41,7 @@ public class OkHttp {
                                 JacksonConverterFactory.create(mapper
                                         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                                         .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                        ))
+                                ))
                         .build();
             }
         }, RETROFIT_WITHOUT_MAPPING {
@@ -57,18 +58,6 @@ public class OkHttp {
 
         public abstract Retrofit getRetrofit();
     }
-
-    private static Map<String, String> getRequiredParamsMap() {
-        Map<String, String> params = new HashMap<>();
-        params.put("app_id", "web/test2");
-        params.put("usr_longitude", "37.774456");
-        //    params.put("clear_cache", "1");
-        params.put("usr_latitude", "55.655751");
-        params.put("timestamp", String.valueOf(Instant.now().getEpochSecond()));
-        return params;
-    }
-
-
 
 
     private Request addParamToRequest(Request request, Map<String, String> params) {
@@ -94,20 +83,44 @@ public class OkHttp {
         }
     }
 
+
     private final Interceptor interceptorGetData = chain -> {
-        Request request = chain.request();
-        String requestBody = bodyToString(request.body());
-        String requestString = String.format("Request %s with Headers %s", request.url(), request.headers());
-        log.debug(String.format("Request body is %s", requestBody));
-        Response response = chain.proceed(request);
-        String jsonString = response.body().string();
-        RESPONSE_THREAD_LOCAL.set(jsonString);
-        REQUEST_THREAD_LOCAL.set(requestString);
-        log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), jsonString));
-        return chain.proceed(request);
+        Pair<Response, String> responsePair = simpleCache(chain);
+        Response response = responsePair.first();
+        MediaType contentType = response.body().contentType();
+        ResponseBody responseBody = ResponseBody.create(contentType, responsePair.second());
+        return response.newBuilder().body(responseBody).build();
     };
 
+    private Response proceedRequest(Interceptor.Chain chain) {
+        try {
+            Request request = chain.request();
+            String requestBody = bodyToString(request.body());
+            log.debug(String.format("Request url is %s", request.url()));
+            log.debug(String.format("Request body is %s", requestBody));
+            Response response = chain.proceed(request);
+            String responseBody = response.body().string();
+            REQUEST_THREAD_LOCAL.set(requestBody);
+            RESPONSE_THREAD_LOCAL.set(responseBody);
+            log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), responseBody));
+            return response;
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 
+    private Pair<Response, String> simpleCache(Interceptor.Chain chain) {
+        Request request = chain.request();
+        if (request.method().equals("GET")) {
+            if (CACHE_REQUESTS.keySet().contains(request.url()))
+                return CACHE_REQUESTS.get(request.url());
+            Response response = proceedRequest(chain);
+            Pair<Response, String> pair = new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
+            CACHE_REQUESTS.put(request.url(), pair);
+            return pair;
+        }
+        return new Pair<>(proceedRequest(chain), RESPONSE_THREAD_LOCAL.get());
+    }
 
 
     private OkHttpClient getClient() {

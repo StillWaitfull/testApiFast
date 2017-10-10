@@ -27,7 +27,6 @@ public class ClimateTests extends AbstractTest {
     @Test
     public void getWeatherByCityTest() throws IOException {
         String city = "London";
-
         Response<Data> weatherListResponse = API_CLIMATE.getClimateDataByCity(city, APP_ID).execute();
         Assert.assertEquals("Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get(), 200, weatherListResponse.code());
         Data weatherList = weatherListResponse.body();
