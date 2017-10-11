@@ -1,0 +1,64 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'io.qameta.allure'
+apply plugin: 'project-report'
+
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "io.qameta.allure:allure-gradle:2.4"
+    }
+}
+
+
+repositories {
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+dependencies {
+    compile group: 'com.squareup.retrofit2', name: 'retrofit', version:'2.2.0'
+    compile group: 'com.squareup.retrofit2', name: 'converter-jackson', version:'2.3.0'
+    compile group: 'org.yaml', name: 'snakeyaml', version:'1.18'
+    compile group: 'junit', name: 'junit', version:'4.12'
+    compile group: 'ru.yandex.qatools.allure', name: 'allure-junit-adaptor', version:'1.5.4'
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version:'1.7.21'
+    compile group: 'org.json', name: 'json', version:'20160810'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5.2'
+    compile group: 'org.jsoup', name: 'jsoup', version:'1.9.2'
+    compile group: 'com.jayway.jsonpath', name: 'json-path', version:'2.2.0'
+    compile group: 'com.googlecode.junit-toolbox', name: 'junit-toolbox', version: '2.3'
+    testCompile group: 'com.tngtech.java', name: 'junit-dataprovider', version:'1.13.0'
+}
+
+tasks.withType(Test) {
+    maxParallelForks = 5
+    forkEvery = 0
+    testLogging {
+        exceptionFormat "full"
+        events  "passed", "failed"
+        displayGranularity = 0
+    }
+}
+
+
+task runSuite(type: Test) {
+    description = "Uses standard JUnit Test Suite sequential execution style."
+    if (System.getProperty("suiteClass") == null)
+        include '**/RegressStage.class'
+    else
+        include '**/' + System.getProperty("suiteClass") + '.class'
+}
+
+
+allure {
+    version = '2.3.5'
+    autoconfigure = true
+}

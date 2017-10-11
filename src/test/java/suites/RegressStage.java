@@ -1,10 +1,11 @@
 package suites;
 
+import com.googlecode.junittoolbox.ParallelSuite;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import tests.climate.ClimateTests;
 
-@RunWith(Suite.class)
+@RunWith(ParallelSuite.class)
 @Suite.SuiteClasses({
         ClimateTests.class
 })
