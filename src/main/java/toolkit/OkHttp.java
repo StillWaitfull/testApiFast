@@ -29,14 +29,20 @@ public class OkHttp {
     private final static ThreadLocal<String> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final int TIMEOUT = Integer.parseInt(ApplicationConfig.TIMEOUT);
-    private static final ConcurrentHashMap<HttpUrl, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Pair<HttpUrl, Headers>, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
+    private boolean cacheOn;
 
+    private OkHttp setCacheOn(boolean cacheOn) {
+        this.cacheOn = cacheOn;
+        return this;
+    }
 
     public enum RETROFITS {
-        RETROFIT {
+        RETROFIT(true) {
             @Override
             public Retrofit getRetrofit() {
                 return builder
+                        .client(new OkHttp().setCacheOn(cacheOn).getClient())
                         .addConverterFactory(
                                 JacksonConverterFactory.create(mapper
                                         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -44,17 +50,39 @@ public class OkHttp {
                                 ))
                         .build();
             }
-        }, RETROFIT_WITHOUT_MAPPING {
+        }, RETROFIT_WITHOUT_CACHE(false) {
+            @Override
+            public Retrofit getRetrofit() {
+                return builder
+                        .client(new OkHttp().setCacheOn(cacheOn).getClient())
+                        .addConverterFactory(
+                                JacksonConverterFactory.create(mapper
+                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                                ))
+                        .build();
+            }
+        }, RETROFIT_WITHOUT_MAPPING(true) {
             @Override
             public Retrofit getRetrofit() {
                 return
-                        builder.addConverterFactory(JacksonConverterFactory.create())
+                        builder.client(new OkHttp().setCacheOn(cacheOn).getClient())
+                                .addConverterFactory(JacksonConverterFactory.create())
                                 .build();
             }
         };
         final Retrofit.Builder builder = new Retrofit.Builder()
-                .client(new OkHttp().getClient())
                 .baseUrl(StageConfig.BASE_URL);
+
+        boolean cacheOn;
+
+        public boolean isCacheOn() {
+            return cacheOn;
+        }
+
+        RETROFITS(boolean cacheOn) {
+            this.cacheOn = cacheOn;
+        }
 
         public abstract Retrofit getRetrofit();
     }
@@ -87,6 +115,7 @@ public class OkHttp {
     private final Interceptor interceptorGetData = chain -> {
         Pair<Response, String> responsePair = simpleCache(chain);
         Response response = responsePair.first();
+        RESPONSE_THREAD_LOCAL.set(responsePair.second());
         MediaType contentType = response.body().contentType();
         ResponseBody responseBody = ResponseBody.create(contentType, responsePair.second());
         return response.newBuilder().body(responseBody).build();
@@ -112,12 +141,14 @@ public class OkHttp {
     private Pair<Response, String> simpleCache(Interceptor.Chain chain) {
         Request request = chain.request();
         if (request.method().equals("GET")) {
-            if (CACHE_REQUESTS.keySet().contains(request.url()))
-                return CACHE_REQUESTS.get(request.url());
+            Pair<HttpUrl, Headers> pairRequest = new Pair<>(request.url(), request.headers());
+            if (CACHE_REQUESTS.keySet().contains(pairRequest) && cacheOn) {
+                return CACHE_REQUESTS.get(pairRequest);
+            }
             Response response = proceedRequest(chain);
-            Pair<Response, String> pair = new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
-            CACHE_REQUESTS.put(request.url(), pair);
-            return pair;
+            Pair<Response, String> pairResponse = new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
+            CACHE_REQUESTS.put(pairRequest, pairResponse);
+            return pairResponse;
         }
         return new Pair<>(proceedRequest(chain), RESPONSE_THREAD_LOCAL.get());
     }
@@ -152,7 +183,7 @@ public class OkHttp {
                     .build();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            throw new RuntimeException(e.getMessage());
         }
 
 

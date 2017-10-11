@@ -8,18 +8,18 @@ import org.junit.Test;
 import requests.ApiClimate;
 import retrofit2.Response;
 import tests.AbstractTest;
-import toolkit.OkHttp;
 import toolkit.RequestCreator;
 
 import java.io.IOException;
 import java.util.UUID;
 
 import static toolkit.OkHttp.RESPONSE_THREAD_LOCAL;
+import static toolkit.OkHttp.RETROFITS.RETROFIT;
 
 @Feature("Функциональные тесты на получение данных о погоде по городу")
 public class ClimateTests extends AbstractTest {
 
-    private static final ApiClimate API_CLIMATE = (ApiClimate) RequestCreator.getRequestInterface(ApiClimate.class, OkHttp.RETROFITS.RETROFIT.getRetrofit());
+    private static final ApiClimate API_CLIMATE = (ApiClimate) RequestCreator.getRequestInterface(ApiClimate.class, RETROFIT);
     private static final String APP_ID = "b1b15e88fa797225412429c1c50c122a1";
 
 

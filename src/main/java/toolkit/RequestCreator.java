@@ -1,21 +1,21 @@
 package toolkit;
 
-import retrofit2.Retrofit;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RequestCreator {
 
-    private static final Map<Class, Object> retrofits = new ConcurrentHashMap<>();
+    private static final Map<Class, Object> RETROFITS = new ConcurrentHashMap<>();
 
 
-    public static Object getRequestInterface(Class clazz, Retrofit retrofit) {
-        if (retrofits.containsKey(clazz))
-            return retrofits.get(clazz);
-        else {
-            Object requestInterface = retrofit.create(clazz);
-            retrofits.put(clazz, requestInterface);
+    public static Object getRequestInterface(Class clazz, OkHttp.RETROFITS retrofit) {
+        if (!retrofit.isCacheOn())
+            return retrofit.getRetrofit().create(clazz);
+        else if (RETROFITS.containsKey(clazz)) {
+            return RETROFITS.get(clazz);
+        } else {
+            Object requestInterface = retrofit.getRetrofit().create(clazz);
+            RETROFITS.put(clazz, requestInterface);
             return requestInterface;
         }
     }
