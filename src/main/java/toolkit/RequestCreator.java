@@ -8,7 +8,7 @@ public class RequestCreator {
     private static final Map<Class, Object> RETROFITS = new ConcurrentHashMap<>();
 
 
-    public static Object getRequestInterface(Class clazz, OkHttp.RETROFITS retrofit) {
+    public static Object getRequestInterface(Class clazz, RETROFITS retrofit) {
         if (!retrofit.isCacheOn())
             return retrofit.getRetrofit().create(clazz);
         else if (RETROFITS.containsKey(clazz)) {

@@ -13,8 +13,8 @@ import toolkit.RequestCreator;
 import java.io.IOException;
 import java.util.UUID;
 
-import static toolkit.OkHttp.RESPONSE_THREAD_LOCAL;
-import static toolkit.OkHttp.RETROFITS.RETROFIT;
+import static toolkit.OkClient.RESPONSE_THREAD_LOCAL;
+import static toolkit.RETROFITS.RETROFIT;
 
 @Feature("Функциональные тесты на получение данных о погоде по городу")
 public class ClimateTests extends AbstractTest {

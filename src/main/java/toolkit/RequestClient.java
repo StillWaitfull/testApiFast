@@ -30,7 +30,10 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 public class RequestClient {
@@ -93,7 +96,6 @@ public class RequestClient {
     }
 
 
-
     public RequestClient addHeader(String name, String value) {
         headers.add(new BasicHeader(name, value));
         return this;
@@ -112,7 +114,6 @@ public class RequestClient {
     public String getResponseText() {
         return responseText;
     }
-
 
 
     public RequestClient sendRequest(METHODS method, String url, List<BasicNameValuePair> params) {

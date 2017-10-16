@@ -1,16 +1,11 @@
 package toolkit;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import config.ApplicationConfig;
-import config.StageConfig;
 import okhttp3.*;
 import okio.Buffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -23,8 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 
-public class OkHttp {
-    private final static Logger log = LoggerFactory.getLogger(OkHttp.class);
+public class OkClient {
+    private final static Logger log = LoggerFactory.getLogger(OkClient.class);
     public final static ThreadLocal<String> RESPONSE_THREAD_LOCAL = new ThreadLocal<>();
     private final static ThreadLocal<String> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -32,59 +27,9 @@ public class OkHttp {
     private static final ConcurrentHashMap<Pair<HttpUrl, Headers>, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
     private boolean cacheOn;
 
-    private OkHttp setCacheOn(boolean cacheOn) {
+    OkClient setCacheOn(boolean cacheOn) {
         this.cacheOn = cacheOn;
         return this;
-    }
-
-    public enum RETROFITS {
-        RETROFIT(true) {
-            @Override
-            public Retrofit getRetrofit() {
-                return builder
-                        .client(new OkHttp().setCacheOn(cacheOn).getClient())
-                        .addConverterFactory(
-                                JacksonConverterFactory.create(mapper
-                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                                ))
-                        .build();
-            }
-        }, RETROFIT_WITHOUT_CACHE(false) {
-            @Override
-            public Retrofit getRetrofit() {
-                return builder
-                        .client(new OkHttp().setCacheOn(cacheOn).getClient())
-                        .addConverterFactory(
-                                JacksonConverterFactory.create(mapper
-                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                                ))
-                        .build();
-            }
-        }, RETROFIT_WITHOUT_MAPPING(true) {
-            @Override
-            public Retrofit getRetrofit() {
-                return
-                        builder.client(new OkHttp().setCacheOn(cacheOn).getClient())
-                                .addConverterFactory(JacksonConverterFactory.create())
-                                .build();
-            }
-        };
-        final Retrofit.Builder builder = new Retrofit.Builder()
-                .baseUrl(StageConfig.BASE_URL);
-
-        boolean cacheOn;
-
-        public boolean isCacheOn() {
-            return cacheOn;
-        }
-
-        RETROFITS(boolean cacheOn) {
-            this.cacheOn = cacheOn;
-        }
-
-        public abstract Retrofit getRetrofit();
     }
 
 
@@ -154,7 +99,7 @@ public class OkHttp {
     }
 
 
-    private OkHttpClient getClient() {
+    OkHttpClient getClient() {
         try {
             final TrustManager[] trustAllCerts = new TrustManager[]{
                     new X509TrustManager() {
