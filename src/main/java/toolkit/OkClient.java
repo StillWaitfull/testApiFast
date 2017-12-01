@@ -98,40 +98,45 @@ public class OkClient {
         return new Pair<>(proceedRequest(chain), RESPONSE_THREAD_LOCAL.get());
     }
 
+    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                }
 
-    OkHttpClient getClient() {
+                @Override
+                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                }
+
+                @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return new java.security.cert.X509Certificate[]{};
+                }
+            }
+    };
+
+
+    private OkHttpClient.Builder getBuilder() {
         try {
-            final TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-                        }
-
-                        @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-                        }
-
-                        @Override
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return new java.security.cert.X509Certificate[]{};
-                        }
-                    }
-            };
             final SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
             final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
             return new OkHttpClient.Builder()
-                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
-                    .addInterceptor(interceptorGetData)
+                    .hostnameVerifier(org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
+                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
                     .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
-                    .readTimeout(TIMEOUT, TimeUnit.SECONDS)
-                    .build();
+                    .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
+                    .readTimeout(TIMEOUT, TimeUnit.SECONDS);
+
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
+    }
 
-
+    OkHttpClient getApiClient() {
+        return getBuilder()
+                .addInterceptor(interceptorGetData)
+                .build();
     }
 
 }

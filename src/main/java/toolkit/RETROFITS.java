@@ -13,7 +13,7 @@ public enum RETROFITS {
         @Override
         public Retrofit getRetrofit() {
             return builder
-                    .client(new OkClient().setCacheOn(cacheOn).getClient())
+                    .client(new OkClient().setCacheOn(cacheOn).getApiClient())
                     .addConverterFactory(
                             JacksonConverterFactory.create(new ObjectMapper()
                                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -25,22 +25,13 @@ public enum RETROFITS {
         @Override
         public Retrofit getRetrofit() {
             return builder
-                    .client(new OkClient().setCacheOn(cacheOn).getClient())
+                    .client(new OkClient().setCacheOn(cacheOn).getApiClient())
                     .addConverterFactory(
                             JacksonConverterFactory.create(new ObjectMapper()
                                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                                     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                             ))
                     .build();
-        }
-    }, RETROFIT_WITHOUT_MAPPING(true) {
-        @Override
-        public Retrofit getRetrofit() {
-            return
-                    builder
-                            .client(new OkClient().setCacheOn(cacheOn).getClient())
-                            .addConverterFactory(JacksonConverterFactory.create())
-                            .build();
         }
     };
     final Retrofit.Builder builder = new Retrofit.Builder()
