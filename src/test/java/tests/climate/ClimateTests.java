@@ -11,6 +11,7 @@ import tests.AbstractTest;
 import toolkit.RequestCreator;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.UUID;
 
 import static toolkit.OkClient.RESPONSE_THREAD_LOCAL;
@@ -30,7 +31,7 @@ public class ClimateTests extends AbstractTest {
         Response<Data> weatherListResponse = API_CLIMATE.getClimateDataByCity(city, APP_ID).execute();
         Assert.assertEquals("Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get(), 200, weatherListResponse.code());
         Data weatherList = weatherListResponse.body();
-        Assert.assertTrue("Запрос не вернул ни одного резульатата", weatherList.getList().size() > 0);
+        Assert.assertTrue("Запрос не вернул ни одного резульатата", Objects.requireNonNull(weatherList).getList().size() > 0);
     }
 
 
@@ -42,6 +43,6 @@ public class ClimateTests extends AbstractTest {
         Response<Data> weatherListResponse = API_CLIMATE.getClimateDataByCity(city, appId).execute();
         Assert.assertEquals("Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get(), 200, weatherListResponse.code());
         Data weatherList = weatherListResponse.body();
-        Assert.assertTrue("Запрос не вернул ни одного резульатата", weatherList.getList().size() > 0);
+        Assert.assertTrue("Запрос не вернул ни одного резульатата", Objects.requireNonNull(weatherList).getList().size() > 0);
     }
 }

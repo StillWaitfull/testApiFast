@@ -5,7 +5,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -13,8 +12,8 @@ public class YamlConfigProvider {
 
     private static final Yaml yaml = new Yaml();
     private static final String configFilePath = "src" + File.separator + "test" + File.separator + "resources" + File.separator + "configs" + File.separator;
-    private static Map paramsMap = new HashMap();
-    private static Map appParamsMap = new HashMap();
+    private static Map paramsMap;
+    private static Map appParamsMap;
 
     static {
         String appConfigs = "application.yml";

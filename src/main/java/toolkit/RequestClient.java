@@ -174,7 +174,7 @@ public class RequestClient {
 
 
     class HttpRequestWithBody extends HttpEntityEnclosingRequestBase {
-        String METHOD_NAME = "GET";
+        String METHOD_NAME;
 
         public String getMethod() {
             return METHOD_NAME;

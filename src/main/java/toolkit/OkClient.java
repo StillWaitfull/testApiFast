@@ -12,8 +12,10 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
-import java.security.cert.CertificateException;
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +32,13 @@ public class OkClient {
     OkClient setCacheOn(boolean cacheOn) {
         this.cacheOn = cacheOn;
         return this;
+    }
+
+
+    private static Map<String, String> getRequiredParamsMap() {
+        Map<String, String> params = new HashMap<>();
+        params.put("timestamp", String.valueOf(Instant.now().getEpochSecond()));
+        return params;
     }
 
 
@@ -56,14 +65,16 @@ public class OkClient {
         }
     }
 
-
-    private final Interceptor interceptorGetData = chain -> {
+    private final Interceptor cache = chain -> {
         Pair<Response, String> responsePair = simpleCache(chain);
         Response response = responsePair.first();
-        RESPONSE_THREAD_LOCAL.set(responsePair.second());
-        MediaType contentType = response.body().contentType();
-        ResponseBody responseBody = ResponseBody.create(contentType, responsePair.second());
-        return response.newBuilder().body(responseBody).build();
+        return response.newBuilder().body(ResponseBody.create(Objects.requireNonNull(response.body()).contentType(), responsePair.second())).build();
+    };
+
+    private final Interceptor requiredParams = chain -> {
+        Request request = chain.request();
+        request = addParamToRequest(request, getRequiredParamsMap());
+        return chain.proceed(request);
     };
 
     private Response proceedRequest(Interceptor.Chain chain) {
@@ -73,7 +84,7 @@ public class OkClient {
             log.debug(String.format("Request url is %s", request.url()));
             log.debug(String.format("Request body is %s", requestBody));
             Response response = chain.proceed(request);
-            String responseBody = response.body().string();
+            String responseBody = Objects.requireNonNull(response.body()).string();
             REQUEST_THREAD_LOCAL.set(requestBody);
             RESPONSE_THREAD_LOCAL.set(responseBody);
             log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), responseBody));
@@ -101,11 +112,11 @@ public class OkClient {
     private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[]{
             new X509TrustManager() {
                 @Override
-                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
                 }
 
                 @Override
-                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
                 }
 
                 @Override
@@ -135,7 +146,7 @@ public class OkClient {
 
     OkHttpClient getApiClient() {
         return getBuilder()
-                .addInterceptor(interceptorGetData)
+                .addInterceptor(cache)
                 .build();
     }
 
