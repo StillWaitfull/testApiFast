@@ -9,7 +9,7 @@ public class RequestCreator {
 
 
     public static Object getRequestInterface(Class clazz, RETROFITS retrofit) {
-        if (!retrofit.isCacheOn())
+        if (!retrofit.getCache())
             return retrofit.getRetrofit().create(clazz);
         else if (RETROFITS.containsKey(clazz)) {
             return RETROFITS.get(clazz);

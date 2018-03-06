@@ -1,6 +1,5 @@
 package toolkit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import config.ApplicationConfig;
 import okhttp3.*;
 import okio.Buffer;
@@ -24,15 +23,8 @@ public class OkClient {
     private final static Logger log = LoggerFactory.getLogger(OkClient.class);
     public final static ThreadLocal<String> RESPONSE_THREAD_LOCAL = new ThreadLocal<>();
     private final static ThreadLocal<String> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
-    private static final ObjectMapper mapper = new ObjectMapper();
     private static final int TIMEOUT = Integer.parseInt(ApplicationConfig.TIMEOUT);
     private static final ConcurrentHashMap<Pair<HttpUrl, Headers>, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
-    private boolean cacheOn;
-
-    OkClient setCacheOn(boolean cacheOn) {
-        this.cacheOn = cacheOn;
-        return this;
-    }
 
 
     private static Map<String, String> getRequiredParamsMap() {
@@ -71,42 +63,49 @@ public class OkClient {
         return response.newBuilder().body(ResponseBody.create(Objects.requireNonNull(response.body()).contentType(), responsePair.second())).build();
     };
 
+    private final Interceptor logger = chain -> {
+        Pair<Response, String> responseStringPair = proceedRequest(chain);
+        Response response = responseStringPair.first();
+        return response.newBuilder().body(ResponseBody.create(Objects.requireNonNull(response.body()).contentType(), responseStringPair.second())).build();
+    };
+
     private final Interceptor requiredParams = chain -> {
         Request request = chain.request();
         request = addParamToRequest(request, getRequiredParamsMap());
         return chain.proceed(request);
     };
 
-    private Response proceedRequest(Interceptor.Chain chain) {
+    private Pair<Response, String> proceedRequest(Interceptor.Chain chain) {
         try {
             Request request = chain.request();
             String requestBody = bodyToString(request.body());
-            log.debug(String.format("Request url is %s", request.url()));
-            log.debug(String.format("Request body is %s", requestBody));
             Response response = chain.proceed(request);
             String responseBody = Objects.requireNonNull(response.body()).string();
-            REQUEST_THREAD_LOCAL.set(requestBody);
+            REQUEST_THREAD_LOCAL.set(request.method().equals("GET") ? request.url().toString() : requestBody);
             RESPONSE_THREAD_LOCAL.set(responseBody);
-            log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), responseBody));
-            return response;
+                log.debug(String.format("Request url is %s", request.url()));
+                log.debug(String.format("Request body is %s", requestBody));
+                log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), responseBody));
+
+            return new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
     }
 
+
     private Pair<Response, String> simpleCache(Interceptor.Chain chain) {
         Request request = chain.request();
         if (request.method().equals("GET")) {
             Pair<HttpUrl, Headers> pairRequest = new Pair<>(request.url(), request.headers());
-            if (CACHE_REQUESTS.keySet().contains(pairRequest) && cacheOn) {
+            if (CACHE_REQUESTS.keySet().contains(pairRequest)) {
                 return CACHE_REQUESTS.get(pairRequest);
             }
-            Response response = proceedRequest(chain);
-            Pair<Response, String> pairResponse = new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
+            Pair<Response, String> pairResponse = proceedRequest(chain);
             CACHE_REQUESTS.put(pairRequest, pairResponse);
             return pairResponse;
         }
-        return new Pair<>(proceedRequest(chain), RESPONSE_THREAD_LOCAL.get());
+        return proceedRequest(chain);
     }
 
     private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[]{
@@ -144,10 +143,11 @@ public class OkClient {
         }
     }
 
-    OkHttpClient getApiClient() {
-        return getBuilder()
-                .addInterceptor(cache)
-                .build();
+    OkHttpClient getApiClient(boolean cacheOn) {
+        OkHttpClient.Builder builder = getBuilder();
+        builder.addInterceptor(cacheOn?cache:logger);
+        return builder.build();
     }
+
 
 }
