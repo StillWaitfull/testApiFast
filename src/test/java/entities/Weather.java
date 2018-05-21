@@ -12,6 +12,10 @@ public class Weather {
     }
 
     private static class Main {
+        private final double temp;
+        private final double tempMin;
+        private final double tempMax;
+        private final double pressure;
         private Main(
                 @JsonProperty(value = "temp") double temp,
                 @JsonProperty(value = "temp_min") double tempMin,
@@ -22,11 +26,6 @@ public class Weather {
             this.tempMax = tempMax;
             this.pressure = pressure;
         }
-
-        private final double temp;
-        private final double tempMin;
-        private final double tempMax;
-        private final double pressure;
 
         public double getTemp() {
             return temp;

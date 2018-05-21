@@ -30,11 +30,7 @@ dependencies {
     compile group: 'junit', name: 'junit', version:'4.12'
     compile group: 'ru.yandex.qatools.allure', name: 'allure-junit-adaptor', version:'1.5.4'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version:'1.7.21'
-    compile group: 'org.json', name: 'json', version:'20160810'
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5.2'
-    compile group: 'org.jsoup', name: 'jsoup', version:'1.9.2'
-    compile group: 'com.jayway.jsonpath', name: 'json-path', version:'2.2.0'
-    compile group: 'com.googlecode.junit-toolbox', name: 'junit-toolbox', version: '2.3'
+    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.9.3'
     testCompile group: 'com.tngtech.java', name: 'junit-dataprovider', version:'1.13.0'
 }
 

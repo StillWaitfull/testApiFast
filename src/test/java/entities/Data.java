@@ -1,10 +1,15 @@
 package entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class Data {
 
+    private final String cod;
+    private final float message;
+    private final int cnt;
+    private final List<Weather> list;
     public Data(
             @JsonProperty(value = "cod", required = true) String cod,
             @JsonProperty(value = "message", required = true) float message,
@@ -15,11 +20,6 @@ public class Data {
         this.cnt = cnt;
         this.list = list;
     }
-
-    private final String cod;
-    private final float message;
-    private final int cnt;
-    private final List<Weather> list;
 
     public List<Weather> getList() {
         return list;

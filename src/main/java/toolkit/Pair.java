@@ -9,6 +9,14 @@ public class Pair<A, B> {
         this.second = second;
     }
 
+    public static <A, B> Pair<A, B> create(A first, B second) {
+        return of(first, second);
+    }
+
+    public static <A, B> Pair<A, B> of(A a, B b) {
+        return new Pair<>(a, b);
+    }
+
     public A first() {
         return first;
     }
@@ -48,14 +56,6 @@ public class Pair<A, B> {
         if (second == null) {
             return other.second == null;
         } else return second.equals(other.second);
-    }
-
-    public static <A, B> Pair<A, B> create(A first, B second) {
-        return of(first, second);
-    }
-
-    public static <A, B> Pair<A, B> of(A a, B b) {
-        return new Pair<>(a, b);
     }
 
 }

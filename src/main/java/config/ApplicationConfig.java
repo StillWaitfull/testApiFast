@@ -1,11 +1,32 @@
 package config;
 
-import toolkit.YamlConfigProvider;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 
 public class ApplicationConfig {
 
-    public static final String TIMEOUT = YamlConfigProvider.getAppParameters("timeout");
+    private static ApplicationConfig instance;
+    @JsonProperty("timeout")
+    public String TIMEOUT;
+    @JsonProperty("configName")
+    public String CONFIG_NAME;
+
+    public static ApplicationConfig getInstance() {
+        if (instance == null) {
+            String path = "application.yml";
+            try {
+                instance = new ObjectMapper(new YAMLFactory()).readValue(new File(path), ApplicationConfig.class);
+            } catch (IOException e) {
+                throw new RuntimeException("Ошибка при парсинге файла с конфигами " + path);
+            }
+        }
+        return instance;
+    }
 
 
 }

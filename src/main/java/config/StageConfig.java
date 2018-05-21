@@ -1,14 +1,29 @@
 package config;
 
-import toolkit.YamlConfigProvider;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import java.io.File;
+import java.io.IOException;
 
 public class StageConfig {
 
-    private static final String HOST = YamlConfigProvider.getStageParameters("host");
+    private static StageConfig instance;
+    @JsonProperty("baseUrl")
+    public String BASE_URL;
 
-    private static final String PROTOCOL = YamlConfigProvider.getStageParameters("protocol") + "://";
-
-    public static final String BASE_URL = PROTOCOL + HOST + YamlConfigProvider.getStageParameters("baseUrl");
-
+    public static StageConfig getInstance() {
+        if (instance == null) {
+            String stage = System.getenv("stage");
+            if (stage == null) stage = ApplicationConfig.getInstance().CONFIG_NAME;
+            String path = "src" + File.separator + "test" + File.separator + "resources" + File.separator + "configs" + File.separator + stage;
+            try {
+                instance = new ObjectMapper(new YAMLFactory()).readValue(new File(path), StageConfig.class);
+            } catch (IOException e) {
+                throw new RuntimeException("Ошибка при парсинге файла с конфигами " + path);
+            }
+        }
+        return instance;
+    }
 }
