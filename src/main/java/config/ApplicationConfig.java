@@ -18,7 +18,7 @@ public class ApplicationConfig {
 
     public static ApplicationConfig getInstance() {
         if (instance == null) {
-            String path = "application.yml";
+            String path =  ApplicationConfig.class.getClassLoader().getResource("application.yml").getPath();;
             try {
                 instance = new ObjectMapper(new YAMLFactory()).readValue(new File(path), ApplicationConfig.class);
             } catch (IOException e) {
