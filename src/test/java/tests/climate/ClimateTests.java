@@ -3,8 +3,8 @@ package tests.climate;
 import entities.Data;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import requests.ApiClimate;
 import retrofit2.Response;
 import tests.AbstractTest;
@@ -26,23 +26,23 @@ public class ClimateTests extends AbstractTest {
 
     @Story("Проверка получения корректного результата")
     @Test
-    public void getWeatherByCityTest() throws IOException {
+    void getWeatherByCityTest() throws IOException {
         String city = "London";
         Response<Data> weatherListResponse = API_CLIMATE.getClimateDataByCity(city, APP_ID).execute();
-        Assert.assertEquals("Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get(), 200, weatherListResponse.code());
+        Assertions.assertEquals(200, weatherListResponse.code(), "Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get());
         Data weatherList = weatherListResponse.body();
-        Assert.assertTrue("Запрос не вернул ни одного резульатата", Objects.requireNonNull(weatherList).getList().size() > 0);
+        Assertions.assertTrue(Objects.requireNonNull(weatherList).getList().size() > 0, "Запрос не вернул ни одного резульатата");
     }
 
 
     @Story("Проверка получения результата c некоректным городом")
     @Test
-    public void getWeatherByIncorrectCityTest() throws IOException {
+    void getWeatherByIncorrectCityTest() throws IOException {
         String appId = "b1b15e88fa797225412429c1c50c122a1";
         String city = UUID.randomUUID().toString();
         Response<Data> weatherListResponse = API_CLIMATE.getClimateDataByCity(city, appId).execute();
-        Assert.assertEquals("Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get(), 200, weatherListResponse.code());
+        Assertions.assertEquals(200, weatherListResponse.code(), "Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get());
         Data weatherList = weatherListResponse.body();
-        Assert.assertTrue("Запрос не вернул ни одного резульатата", Objects.requireNonNull(weatherList).getList().size() > 0);
+        Assertions.assertTrue(Objects.requireNonNull(weatherList).getList().size() > 0, "Запрос не вернул ни одного резульатата");
     }
 }
