@@ -21,6 +21,8 @@ public class OkClient {
     private final static ThreadLocal<String> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
     private static final int TIMEOUT = Integer.parseInt(ApplicationConfig.getInstance().TIMEOUT);
     private static final ConcurrentHashMap<Pair<HttpUrl, Headers>, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
+
+
     private final Interceptor cache = chain -> {
         Pair<Response, String> responsePair = simpleCache(chain);
         Response response = responsePair.first();
@@ -72,12 +74,11 @@ public class OkClient {
             String requestBody = bodyToString(request.body());
             Response response = chain.proceed(request);
             String responseBody = Objects.requireNonNull(response.body()).string();
-            REQUEST_THREAD_LOCAL.set(request.method().equals("GET") ? request.url().toString() : requestBody);
+            REQUEST_THREAD_LOCAL.set(request.url().toString() + (request.method().equals("GET") ? null : "\n" + requestBody));
             RESPONSE_THREAD_LOCAL.set(responseBody);
             log.debug(String.format("Request url is %s", request.url()));
             log.debug(String.format("Request body is %s", requestBody));
             log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), responseBody));
-
             return new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
