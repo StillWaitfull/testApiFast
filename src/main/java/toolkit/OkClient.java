@@ -70,14 +70,13 @@ public class OkClient {
         try {
             Request request = chain.request();
             String requestBody = bodyToString(request.body());
+            REQUEST_THREAD_LOCAL.set(request.url().toString() + (request.method().equals("GET") ? "" : "\n" + requestBody));
             Response response = chain.proceed(request);
             String responseBody = Objects.requireNonNull(response.body()).string();
-            REQUEST_THREAD_LOCAL.set(request.method().equals("GET") ? request.url().toString() : requestBody);
             RESPONSE_THREAD_LOCAL.set(responseBody);
             log.debug(String.format("Request url is %s", request.url()));
             log.debug(String.format("Request body is %s", requestBody));
             log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), responseBody));
-
             return new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
