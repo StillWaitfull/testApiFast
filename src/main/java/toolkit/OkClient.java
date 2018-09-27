@@ -21,6 +21,8 @@ public class OkClient {
     private final static ThreadLocal<String> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
     private static final int TIMEOUT = Integer.parseInt(ApplicationConfig.getInstance().TIMEOUT);
     private static final ConcurrentHashMap<Pair<HttpUrl, Headers>, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
+
+
     private final Interceptor cache = chain -> {
         Pair<Response, String> responsePair = simpleCache(chain);
         Response response = responsePair.first();
