@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
-import static toolkit.OkClient.RESPONSE_THREAD_LOCAL;
+import static toolkit.OkClient.getResponseText;
 import static toolkit.RETROFITS.RETROFIT;
 
 @Feature("Функциональные тесты на получение данных о погоде по городу")
@@ -29,7 +29,7 @@ public class ClimateTests extends AbstractTest {
     void getWeatherByCityTest() throws IOException {
         String city = "London";
         Response<Data> weatherListResponse = API_CLIMATE.getClimateDataByCity(city, APP_ID).execute();
-        Assertions.assertEquals(200, weatherListResponse.code(), "Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get());
+        Assertions.assertEquals(200, weatherListResponse.code(), "Код ответа на запрос погоды по городу " + city + " не 200 " + getResponseText());
         Data weatherList = weatherListResponse.body();
         Assertions.assertTrue(Objects.requireNonNull(weatherList).getList().size() > 0, "Запрос не вернул ни одного резульатата");
     }
@@ -41,7 +41,7 @@ public class ClimateTests extends AbstractTest {
         String appId = "b1b15e88fa797225412429c1c50c122a1";
         String city = UUID.randomUUID().toString();
         Response<Data> weatherListResponse = API_CLIMATE.getClimateDataByCity(city, appId).execute();
-        Assertions.assertEquals(200, weatherListResponse.code(), "Код ответа на запрос погоды по городу " + city + " не 200 " + RESPONSE_THREAD_LOCAL.get());
+        Assertions.assertEquals(200, weatherListResponse.code(), "Код ответа на запрос погоды по городу " + city + " не 200 " + getResponseText());
         Data weatherList = weatherListResponse.body();
         Assertions.assertTrue(Objects.requireNonNull(weatherList).getList().size() > 0, "Запрос не вернул ни одного резульатата");
     }

@@ -16,9 +16,9 @@ import java.util.concurrent.TimeUnit;
 
 
 public class OkClient {
-    public final static ThreadLocal<String> RESPONSE_THREAD_LOCAL = new ThreadLocal<>();
-    private final static Logger log = LoggerFactory.getLogger(OkClient.class);
+    private final static ThreadLocal<String> RESPONSE_THREAD_LOCAL = new ThreadLocal<>();
     private final static ThreadLocal<String> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
+    private final static Logger log = LoggerFactory.getLogger(OkClient.class);
     private static final int TIMEOUT = Integer.parseInt(ApplicationConfig.getInstance().TIMEOUT);
     private static final ConcurrentHashMap<Pair<HttpUrl, Headers>, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
 
@@ -79,7 +79,7 @@ public class OkClient {
             log.debug(String.format("Request url is %s", request.url()));
             log.debug(String.format("Request body is %s", requestBody));
             log.info(String.format("Response for %s  with response\n %s \n", response.request().url(), responseBody));
-            return new Pair<>(response, RESPONSE_THREAD_LOCAL.get());
+            return new Pair<>(response, responseBody);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -106,7 +106,6 @@ public class OkClient {
                     .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
                     .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
                     .readTimeout(TIMEOUT, TimeUnit.SECONDS);
-
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -118,5 +117,7 @@ public class OkClient {
         return builder.build();
     }
 
-
+    public static String getResponseText() {
+        return RESPONSE_THREAD_LOCAL.get();
+    }
 }
