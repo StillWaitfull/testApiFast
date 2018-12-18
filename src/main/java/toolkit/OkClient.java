@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.CookieManager;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,6 +101,17 @@ public class OkClient {
         return proceedRequest(chain);
     }
 
+    public static Response makeRequest(OkHttpClient httpClient, Request request) {
+        Response response = null;
+        try {
+            response = httpClient.newCall(request).execute();
+            response.close();
+        } catch (Exception e) {
+            log.debug(Logger.ROOT_LOGGER_NAME, e);
+        }
+        return response;
+    }
+
     private OkHttpClient.Builder getBuilder() {
         try {
             return new OkHttpClient.Builder()
@@ -111,10 +123,12 @@ public class OkClient {
         }
     }
 
+
     OkHttpClient getApiClient(boolean cacheOn) {
-        OkHttpClient.Builder builder = getBuilder();
-        builder.addInterceptor(cacheOn ? cache : logger);
-        return builder.build();
+        return getBuilder()
+                .cookieJar(new JavaNetCookieJar(new CookieManager()))
+                .addInterceptor(cacheOn ? cache : logger)
+                .build();
     }
 
     public static String getResponseText() {
