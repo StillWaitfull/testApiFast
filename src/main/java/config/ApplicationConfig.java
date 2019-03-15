@@ -15,6 +15,8 @@ public class ApplicationConfig {
     public String TIMEOUT;
     @JsonProperty("configName")
     public String CONFIG_NAME;
+    @JsonProperty("pause")
+    public Integer PAUSE;
 
     public static ApplicationConfig getInstance() {
         if (instance == null) {

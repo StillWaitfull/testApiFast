@@ -23,6 +23,13 @@ public class OkClient {
     private static final int TIMEOUT = Integer.parseInt(ApplicationConfig.getInstance().TIMEOUT);
     private static final ConcurrentHashMap<Pair<HttpUrl, Headers>, Pair<Response, String>> CACHE_REQUESTS = new ConcurrentHashMap<>();
 
+    public static String getRequest() {
+        return REQUEST_THREAD_LOCAL.get();
+    }
+
+    public static String getResponse() {
+        return RESPONSE_THREAD_LOCAL.get();
+    }
 
     private final Interceptor cache = chain -> {
         Pair<Response, String> responsePair = simpleCache(chain);
